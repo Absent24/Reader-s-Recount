@@ -7,6 +7,7 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { deleteImage, imageExists, uploadImage } from "./supabase";
 import axios from "axios";
+import { bookDetails } from "./types";
 
 const axiosClient = axios.create();
 let cancelRequest = axios.CancelToken.source();
@@ -138,7 +139,7 @@ export const updateProfileImg = async (
   }
 };
 
-export const getApiData = async (search: string) => {
+export const getApiSearchData = async (search: string) => {
   if (cancelRequest) cancelRequest.cancel("Canceled.");
 
   cancelRequest = axios.CancelToken.source();
@@ -146,33 +147,76 @@ export const getApiData = async (search: string) => {
   if (search) {
     try {
       const response = await axiosClient.get(
-        `https://openlibrary.org/search.json?q=${search}&limit=1`,
+        `https://openlibrary.org/search.json?q=${search}&limit=5`,
         { cancelToken: cancelRequest.token }
       );
 
-      const data = response.data;
-      const coverId = data.docs[0]?.cover_i;
+      const books = response.data.docs.map((book: any) => ({
+        title: book.title,
+        author: book.author_name.slice(0, 3).join(", "),
+        coverId: book.cover_i,
+        key: book.key.substring(book.key.lastIndexOf("/") + 1),
+        image: "/images/defaultCover.png",
+      }));
 
-      const imageResponse = await axiosClient.get(
-        `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`,
-        { cancelToken: cancelRequest.token }
-      );
-
-      const result = {
-        title: data.docs[0].title as string,
-        autor: data.docs[0].author_name as string,
-        image: imageResponse.config.url as string,
-        id: coverId,
-      };
-
-      return result ? result : null;
+      return books;
     } catch (error) {
       if (axios.isCancel(error)) {
         console.log("Request canceled", error.message);
       } else {
-        console.error("An error occurred:", error);
+        console.error("Error fetching data:", error);
       }
       return null;
     }
+  }
+};
+
+export const getCoverImage = async (
+  coverId: number | undefined,
+  size: string = "S"
+) => {
+  if (!coverId) return "/images/defaultCover.png";
+  if (cancelRequest) cancelRequest.cancel("Canceled.");
+
+  cancelRequest = axios.CancelToken.source();
+
+  try {
+    const image = await axiosClient.get(
+      `https://covers.openlibrary.org/b/id/${coverId}-${size}.jpg`,
+      { cancelToken: cancelRequest.token }
+    );
+    return image.config.url as string;
+  } catch (error) {
+    console.error("Error fetching cover image:", error);
+    return "/images/defaultCover.png";
+  }
+};
+
+export const getApiDetailsData = async (key: string | string[]) => {
+  if (cancelRequest) cancelRequest.cancel("Canceled.");
+
+  cancelRequest = axios.CancelToken.source();
+  try {
+    const response = await axiosClient.get(
+      `https://openlibrary.org/search.json?q=${key}&limit=1`,
+      { cancelToken: cancelRequest.token }
+    );
+
+    const data = response.data.docs[0];
+
+    const book: bookDetails = {
+      title: data.title,
+      bookKey: data.key,
+      author: data.author_name[0],
+      authorKey: data.author_key[0],
+      firstPublish: data.first_publish_year,
+      numOfPages: data.number_of_pages_median,
+      coverId: data.cover_i,
+      openlibRating: Math.round(data.ratings_average * 100) / 100,
+    };
+
+    return book;
+  } catch (error) {
+    toastError(error);
   }
 };

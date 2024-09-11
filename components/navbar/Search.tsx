@@ -3,30 +3,38 @@
 import { Input } from "../ui/input";
 import { useDebouncedCallback } from "use-debounce";
 import { useState, useRef, useEffect } from "react";
-import { getApiData } from "@/utils/actions";
-import Image from "next/image";
+import { getApiSearchData, getCoverImage } from "@/utils/actions";
 import { useRouter } from "next/navigation";
-
-interface Book {
-  title: string;
-  autor: string;
-  image: string;
-  id: string;
-}
+import { Book } from "@/utils/types";
+import BookList from "./BookList";
 
 function Search() {
-  const [book, setBook] = useState<Book | null>(null);
+  const [books, setBooks] = useState<Book[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const router = useRouter();
 
   const handleSearch = useDebouncedCallback(async (value: string) => {
-    const newBook = await getApiData(value);
-    if (newBook) {
-      setBook(newBook);
+    if (value.length <= 1) {
+      setBooks([]);
+      setIsOpen(false);
+      return;
+    }
+
+    const getBooks = await getApiSearchData(value);
+    if (getBooks) {
+      setBooks(getBooks);
       setIsOpen(true);
+      getBooks.forEach(async (book: any, index: any) => {
+        const image = await getCoverImage(book.coverId);
+        setBooks((prevBooks) => {
+          const updatedBooks = [...prevBooks];
+          updatedBooks[index] = { ...book, image };
+          return updatedBooks;
+        });
+      });
     } else {
-      setBook(null);
+      setBooks([]);
       setIsOpen(false);
     }
   }, 500);
@@ -40,8 +48,8 @@ function Search() {
     }
   };
 
-  const handleClick = (id: string) => {
-    router.push(`/details/${id}`);
+  const handleClick = (key: string) => {
+    router.push(`/details/${key}`);
     setIsOpen(false);
   };
 
@@ -62,30 +70,16 @@ function Search() {
         className="max-w-xs dark:bg-muted"
         onChange={(e) => {
           const value = e.target.value;
-          handleSearch(value);
+          if (value.length >= 1) handleSearch(value);
+          else handleSearch.cancel();
         }}
         onFocus={() => setIsOpen(true)}
       />
-      {isOpen && book ? (
-        <div className="absolute top-full mt-2 w-full max-w-sm dark:bg-muted shadow-md rounded-md z-20">
-          <ul className="py-1 bg-background">
-            <li
-              className="px-2 py-1 cursor-pointer flex flex-row"
-              onClick={() => handleClick(book.id)}>
-              <Image
-                src={book.image}
-                alt="Author"
-                width={40}
-                height={40}
-                className="object-cover pr-3 w-[6rem] h-[5rem]"
-              />
-              <div>
-                <h3 className="text-sm font-semibold">{book.title}</h3>
-                <p className="text-sm font-light">{book.autor}</p>
-              </div>
-            </li>
-          </ul>
-        </div>
+      {isOpen && books.length > 0 ? (
+        <BookList
+          books={books}
+          handleClick={handleClick}
+        />
       ) : null}
     </div>
   );
