@@ -6,6 +6,10 @@ import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { deleteImage, imageExists, uploadImage } from "./supabase";
+import axios from "axios";
+
+const axiosClient = axios.create();
+let cancelRequest = axios.CancelToken.source();
 
 const getAuthUser = async () => {
   const user = await currentUser();
@@ -131,5 +135,44 @@ export const updateProfileImg = async (
     return { message: "Image updated successfully" };
   } catch (error) {
     return toastError(error);
+  }
+};
+
+export const getApiData = async (search: string) => {
+  if (cancelRequest) cancelRequest.cancel("Canceled.");
+
+  cancelRequest = axios.CancelToken.source();
+
+  if (search) {
+    try {
+      const response = await axiosClient.get(
+        `https://openlibrary.org/search.json?q=${search}&limit=1`,
+        { cancelToken: cancelRequest.token }
+      );
+
+      const data = response.data;
+      const coverId = data.docs[0]?.cover_i;
+
+      const imageResponse = await axiosClient.get(
+        `https://covers.openlibrary.org/b/id/${coverId}-M.jpg`,
+        { cancelToken: cancelRequest.token }
+      );
+
+      const result = {
+        title: data.docs[0].title as string,
+        autor: data.docs[0].author_name as string,
+        image: imageResponse.config.url as string,
+        id: coverId,
+      };
+
+      return result ? result : null;
+    } catch (error) {
+      if (axios.isCancel(error)) {
+        console.log("Request canceled", error.message);
+      } else {
+        console.error("An error occurred:", error);
+      }
+      return null;
+    }
   }
 };

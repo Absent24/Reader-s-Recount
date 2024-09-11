@@ -10,6 +10,14 @@ const nextConfig = {
         protocol: "https",
         hostname: "jmzfzvwhfheaxrajwpct.supabase.co",
       },
+      {
+        protocol: "https",
+        hostname: "*.us.archive.org",
+      },
+      {
+        protocol: "https",
+        hostname: "covers.openlibrary.org",
+      },
     ],
   },
 };
