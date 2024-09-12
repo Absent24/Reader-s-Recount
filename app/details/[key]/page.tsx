@@ -1,41 +1,78 @@
 "use client";
 
-import { getApiDetailsData } from "@/utils/actions";
+import { getApiDetailsData, getCoverImage } from "@/utils/actions";
 import { bookDetails } from "@/utils/types";
+import Image from "next/image";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 
 function DetailsPage() {
-  const { key } = useParams(); // Fetch the dynamic param from route
+  const { key } = useParams();
   const [book, setBook] = useState<bookDetails | undefined>(undefined);
+  const [loading, setLoading] = useState(false); //To prevent double api calls
 
   useEffect(() => {
-    // Fetch the data using the key when component mounts
-    const fetchBookDetails = async () => {
+    const getBookDetails = async () => {
+      if (loading) return;
+      setLoading(true);
+
       if (key) {
         const bookData = await getApiDetailsData(key);
-        setBook(bookData);
+        if (bookData) {
+          setBook(bookData);
+
+          const image = await getCoverImage(bookData.coverId, "L");
+          setBook((prevBook) => {
+            if (prevBook) {
+              return { ...prevBook, image };
+            }
+          });
+        }
       }
+      setLoading(false);
     };
 
-    fetchBookDetails();
-  }, [key]); // Dependency array ensures it only runs when `key` changes
+    getBookDetails();
+  }, [key]);
 
-  // Check if the book exists before rendering
-  if (!book) {
-    return <div>No book details found.</div>;
+  if (!book || !book.image) {
+    return (
+      <div className="p-4 text-center text-gray-600">
+        No book details found.
+      </div>
+    );
   }
 
   return (
-    <div>
-      <p>Title: {book.title}</p>
-      <p>Book Key: {book.bookKey}</p>
-      <p>Author: {book.author}</p>
-      <p>Author Key: {book.authorKey}</p>
-      <p>First Published: {book.firstPublish}</p>
-      <p>Number of Pages: {book.numOfPages}</p>
-      <p>Cover ID: {book.coverId}</p>
-      <p>OpenLib Rating: {book.openlibRating}</p>
+    <div className="p-2 mx-auto">
+      <div className="flex flex-col md:flex-row gap-6 items-start">
+        <div className="w-[230px] h-[350px] relative">
+          <Image
+            src={book.image}
+            alt={`${book.title} cover`}
+            layout="fill"
+            objectFit="cover"
+            className="rounded-lg"
+          />
+        </div>
+        <div className="flex flex-col justify-between">
+          <h1 className="text-3xl font-semibold mb-4">{book.title}</h1>
+          <p className="text-xl mb-2">
+            <strong>Author:</strong> {book.author}
+          </p>
+          <p className="text-xl mb-2">
+            <strong>First Published:</strong> {book.firstPublish}
+          </p>
+          <p className="text-xl mb-2">
+            <strong>Number of Pages:</strong> {book.numOfPages}
+          </p>
+          {book.openlibRating !== undefined && (
+            <p className="text-xl mb-2">
+              <strong>OpenLib Rating:</strong> {book.openlibRating.toFixed(2)}
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

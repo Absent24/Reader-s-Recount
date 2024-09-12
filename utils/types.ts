@@ -21,4 +21,5 @@ export type bookDetails = {
   coverId: number | undefined;
   openlibRating: number | undefined;
   rrRating?: number | undefined;
+  image?: string | "/images/defaultCover.png";
 };

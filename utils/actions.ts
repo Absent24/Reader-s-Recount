@@ -10,7 +10,6 @@ import axios from "axios";
 import { bookDetails } from "./types";
 
 const axiosClient = axios.create();
-let cancelRequest = axios.CancelToken.source();
 
 const getAuthUser = async () => {
   const user = await currentUser();
@@ -140,15 +139,10 @@ export const updateProfileImg = async (
 };
 
 export const getApiSearchData = async (search: string) => {
-  if (cancelRequest) cancelRequest.cancel("Canceled.");
-
-  cancelRequest = axios.CancelToken.source();
-
   if (search) {
     try {
       const response = await axiosClient.get(
-        `https://openlibrary.org/search.json?q=${search}&limit=5`,
-        { cancelToken: cancelRequest.token }
+        `https://openlibrary.org/search.json?q=${search}&limit=5`
       );
 
       const books = response.data.docs.map((book: any) => ({
@@ -161,11 +155,7 @@ export const getApiSearchData = async (search: string) => {
 
       return books;
     } catch (error) {
-      if (axios.isCancel(error)) {
-        console.log("Request canceled", error.message);
-      } else {
-        console.error("Error fetching data:", error);
-      }
+      console.error("Error fetching data:", error);
       return null;
     }
   }
@@ -176,14 +166,10 @@ export const getCoverImage = async (
   size: string = "S"
 ) => {
   if (!coverId) return "/images/defaultCover.png";
-  if (cancelRequest) cancelRequest.cancel("Canceled.");
-
-  cancelRequest = axios.CancelToken.source();
 
   try {
     const image = await axiosClient.get(
-      `https://covers.openlibrary.org/b/id/${coverId}-${size}.jpg`,
-      { cancelToken: cancelRequest.token }
+      `https://covers.openlibrary.org/b/id/${coverId}-${size}.jpg`
     );
     return image.config.url as string;
   } catch (error) {
@@ -193,13 +179,9 @@ export const getCoverImage = async (
 };
 
 export const getApiDetailsData = async (key: string | string[]) => {
-  if (cancelRequest) cancelRequest.cancel("Canceled.");
-
-  cancelRequest = axios.CancelToken.source();
   try {
     const response = await axiosClient.get(
-      `https://openlibrary.org/search.json?q=${key}&limit=1`,
-      { cancelToken: cancelRequest.token }
+      `https://openlibrary.org/search.json?q=${key}&limit=1`
     );
 
     const data = response.data.docs[0];
@@ -213,6 +195,7 @@ export const getApiDetailsData = async (key: string | string[]) => {
       numOfPages: data.number_of_pages_median,
       coverId: data.cover_i,
       openlibRating: Math.round(data.ratings_average * 100) / 100,
+      image: "/images/defaultCover.png",
     };
 
     return book;

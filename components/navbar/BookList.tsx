@@ -19,8 +19,9 @@ function BookList({ books, handleClick }: BookListProps) {
               <Image
                 src={book.image}
                 alt="Author"
-                layout="fill"
-                objectFit="cover"
+                fill
+                sizes="39vw"
+                className="object-cover"
               />
             </div>
             <div className="ml-4">

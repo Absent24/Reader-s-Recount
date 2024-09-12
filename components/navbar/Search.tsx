@@ -11,32 +11,57 @@ import BookList from "./BookList";
 function Search() {
   const [books, setBooks] = useState<Book[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const request = useRef<number>(0);
   const router = useRouter();
 
-  const handleSearch = useDebouncedCallback(async (value: string) => {
-    if (value.length <= 1) {
-      setBooks([]);
-      setIsOpen(false);
-      return;
-    }
+  useEffect(() => {
+    const fetchBooks = async () => {
+      const requestId = Date.now();
+      request.current = requestId;
 
-    const getBooks = await getApiSearchData(value);
-    if (getBooks) {
-      setBooks(getBooks);
-      setIsOpen(true);
-      getBooks.forEach(async (book: any, index: any) => {
-        const image = await getCoverImage(book.coverId);
-        setBooks((prevBooks) => {
-          const updatedBooks = [...prevBooks];
-          updatedBooks[index] = { ...book, image };
-          return updatedBooks;
-        });
-      });
-    } else {
-      setBooks([]);
-      setIsOpen(false);
-    }
+      if (searchTerm.length <= 1) {
+        setBooks([]);
+        setIsOpen(false);
+        return;
+      }
+      try {
+        if (request.current !== requestId) return;
+        const getBooks = await getApiSearchData(searchTerm);
+        if (getBooks) {
+          setBooks(getBooks);
+          setIsOpen(true);
+          if (request.current === requestId) {
+            getBooks.forEach(async (book: any, index: number) => {
+              const image = await getCoverImage(book.coverId);
+              if (request.current === requestId) {
+                setBooks((prevBooks) =>
+                  prevBooks.map((book, mapIndex) =>
+                    index === mapIndex ? { ...book, image } : book
+                  )
+                );
+              } else {
+                return;
+              }
+            });
+          }
+        } else {
+          setBooks([]);
+          setIsOpen(false);
+        }
+      } catch (error) {
+        setBooks([]);
+        setIsOpen(false);
+        console.log("Search error");
+      }
+    };
+
+    fetchBooks();
+  }, [searchTerm]);
+
+  const handleSearch = useDebouncedCallback((value: string) => {
+    setSearchTerm(value);
   }, 500);
 
   const handleClickOutside = (event: MouseEvent) => {
@@ -70,8 +95,7 @@ function Search() {
         className="max-w-xs dark:bg-muted"
         onChange={(e) => {
           const value = e.target.value;
-          if (value.length >= 1) handleSearch(value);
-          else handleSearch.cancel();
+          handleSearch(value);
         }}
         onFocus={() => setIsOpen(true)}
       />
