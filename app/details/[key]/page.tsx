@@ -1,6 +1,9 @@
 "use client";
 
-import { getApiDetailsData, getCoverImage } from "@/utils/actions";
+import PageLoading from "@/components/details/PageLoading";
+import SubmitReview from "@/components/reviews/SubmitReview";
+import { Card } from "@/components/ui/card";
+import { getApiDetailsData, getCoverImage } from "@/utils/api";
 import { bookDetails } from "@/utils/types";
 import Image from "next/image";
 import { useParams } from "next/navigation";
@@ -9,13 +12,9 @@ import { useEffect, useState } from "react";
 function DetailsPage() {
   const { key } = useParams();
   const [book, setBook] = useState<bookDetails | undefined>(undefined);
-  const [loading, setLoading] = useState(false); //To prevent double api calls
 
   useEffect(() => {
     const getBookDetails = async () => {
-      if (loading) return;
-      setLoading(true);
-
       if (key) {
         const bookData = await getApiDetailsData(key);
         if (bookData) {
@@ -29,50 +28,64 @@ function DetailsPage() {
           });
         }
       }
-      setLoading(false);
     };
 
     getBookDetails();
   }, [key]);
 
   if (!book || !book.image) {
-    return (
-      <div className="p-4 text-center text-gray-600">
-        No book details found.
-      </div>
-    );
+    return <PageLoading />;
   }
 
   return (
-    <div className="p-2 mx-auto">
-      <div className="flex flex-col md:flex-row gap-6 items-start">
-        <div className="w-[230px] h-[350px] relative">
-          <Image
-            src={book.image}
-            alt={`${book.title} cover`}
-            layout="fill"
-            objectFit="cover"
-            className="rounded-lg"
-          />
+    <div className="min-h-screen flex items-start justify-center p-2">
+      <Card className="max-w-4xl w-full rounded-lg shadow-lg p-6 flex flex-col items-start gap-4">
+        <div className="w-full flex flex-col md:flex-row items-start gap-6">
+          <div className="w-[200px] h-[300px] relative flex-shrink-0">
+            <Image
+              src={book.image}
+              alt={`${book.title} cover`}
+              fill
+              sizes="50vw"
+              className="rounded-lg object-cover"
+            />
+          </div>
+          <div className="flex flex-col justify-between flex-1 h-[300px]">
+            <h1 className="text-3xl font-semibold mb-2 text-center">
+              {book.title}
+            </h1>
+            <p className="text-lg mb-4 text-center">{book.author}</p>
+            <div className="flex flex-col items-start w-full mb-4 justify-center h-full">
+              <p className="text-lg">
+                <strong>First Published:</strong> {book.firstPublish}
+              </p>
+              <p className="text-lg">
+                <strong>Number of Pages:</strong> {book.numOfPages}
+              </p>
+            </div>
+            {book.openlibRating !== undefined && (
+              <div className="flex justify-between w-full mt-auto">
+                <p className="text-lg">
+                  <strong>OpenLibrary:</strong> {book.openlibRating.toFixed(2)}{" "}
+                  ({book.openlibNumRating})
+                </p>
+                <p className="text-lg">
+                  <strong>Reader's Recount:</strong> {book.rrRating}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
-        <div className="flex flex-col justify-between">
-          <h1 className="text-3xl font-semibold mb-4">{book.title}</h1>
-          <p className="text-xl mb-2">
-            <strong>Author:</strong> {book.author}
+        <div>
+          <p>
+            You haven't reviewed this book yet. Share your thoughts and let us
+            know what you think!
           </p>
-          <p className="text-xl mb-2">
-            <strong>First Published:</strong> {book.firstPublish}
-          </p>
-          <p className="text-xl mb-2">
-            <strong>Number of Pages:</strong> {book.numOfPages}
-          </p>
-          {book.openlibRating !== undefined && (
-            <p className="text-xl mb-2">
-              <strong>OpenLib Rating:</strong> {book.openlibRating.toFixed(2)}
-            </p>
-          )}
         </div>
-      </div>
+        <div className="flex justify-start w-full">
+          <SubmitReview book={book} />
+        </div>
+      </Card>
     </div>
   );
 }

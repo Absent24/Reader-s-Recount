@@ -3,7 +3,7 @@
 import { Input } from "../ui/input";
 import { useDebouncedCallback } from "use-debounce";
 import { useState, useRef, useEffect } from "react";
-import { getApiSearchData, getCoverImage } from "@/utils/actions";
+import { getApiSearchData, getCoverImage } from "@/utils/api";
 import { useRouter } from "next/navigation";
 import { Book } from "@/utils/types";
 import BookList from "./BookList";
@@ -33,18 +33,15 @@ function Search() {
           setBooks(getBooks);
           setIsOpen(true);
           if (request.current === requestId) {
-            getBooks.forEach(async (book: any, index: number) => {
-              const image = await getCoverImage(book.coverId);
-              if (request.current === requestId) {
-                setBooks((prevBooks) =>
-                  prevBooks.map((book, mapIndex) =>
-                    index === mapIndex ? { ...book, image } : book
-                  )
-                );
-              } else {
-                return;
-              }
-            });
+            const booksWithImages = await Promise.all(
+              getBooks.map(async (book: any, index: any) => {
+                const image = await getCoverImage(book.coverId);
+                return { ...book, image };
+              })
+            );
+            if (request.current === requestId) {
+              setBooks(booksWithImages);
+            }
           }
         } else {
           setBooks([]);

@@ -1,7 +1,4 @@
-export type actionType = (
-  prevState: any,
-  formData: FormData
-) => Promise<{ message: string }>;
+export type actionType = (prevState: any, formData: FormData) => Promise<any>;
 
 export type Book = {
   title: string;
@@ -20,6 +17,8 @@ export type bookDetails = {
   numOfPages: number;
   coverId: number | undefined;
   openlibRating: number | undefined;
+  openlibNumRating: number | undefined;
   rrRating?: number | undefined;
+  rrNumRating?: number | undefined;
   image?: string | "/images/defaultCover.png";
 };

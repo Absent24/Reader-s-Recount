@@ -18,5 +18,35 @@ model Profile {
   profileImage String
   createdAt    DateTime   @default(now())
   updatedAt    DateTime   @updatedAt
+  reviews      Review[]
+}
 
+model Book {
+  id             String  @id @default(uuid())
+  bookKey            String  @unique
+  title          String
+  author         String
+  authorKey      String
+  firstPublish   Int
+  numOfPages     Int
+  coverId        Int?
+  openlibRating  Float?
+  openlibNumRating Int?
+  rrRating       Float?
+  rrNumRating    Int?
+  image          String
+  reviews        Review[]
+}
+
+model Review {
+  id          String @id @default(uuid())
+  profile     Profile @relation(fields: [profileId], references: [clerkId], onDelete: Cascade)
+  profileId   String
+  book        Book @relation(fields: [bookKey], references: [bookKey])
+  bookKey     String
+  rating      Int
+  title       String
+  review      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
