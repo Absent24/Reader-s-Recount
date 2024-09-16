@@ -151,7 +151,7 @@ export const updateProfileImg = async (
 export const reviewExist = async (
   userId: string | undefined,
   bookKey: string | undefined
-): Promise<Boolean> => {
+): Promise<boolean> => {
   if (!userId && !bookKey) return false;
 
   const review = await db.review.findFirst({
