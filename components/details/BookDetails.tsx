@@ -11,8 +11,8 @@ function BookDetails({
   reviewed,
 }: {
   book: bookDetails;
-  isUser: Boolean;
-  reviewed: Boolean;
+  isUser: boolean;
+  reviewed: boolean;
 }) {
   return (
     <div className="min-h-screen flex items-start justify-center p-2">
@@ -55,15 +55,15 @@ function BookDetails({
               )}
               {book.rrRating ? (
                 <p className="text-lg flex flex-row items-center">
-                  <strong>Reader's Recount:</strong>{" "}
+                  <strong>Reader&apos;s Recount:</strong>{" "}
                   <FaStar className="w-3 h-3 mx-1" /> {book.rrRating} (
                   {book.rrNumRating})
                 </p>
               ) : (
                 <p className="text-md font-light">
                   <strong className="text-lg font-bold">
-                    Reader's Recount:
-                  </strong>{" "}
+                    Reader&apos;s Recount:
+                  </strong>
                   Not rated
                 </p>
               )}
@@ -76,8 +76,8 @@ function BookDetails({
             <div className="w-full">
               <div className="mb-4">
                 <p>
-                  You haven't reviewed this book yet. Share your thoughts and
-                  let us know what you think!
+                  You haven&apos;t reviewed this book yet. Share your thoughts
+                  and let us know what you think!
                 </p>
               </div>
               <div className="flex justify-start w-full">

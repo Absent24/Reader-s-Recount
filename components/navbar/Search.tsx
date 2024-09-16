@@ -34,7 +34,7 @@ function Search() {
           setIsOpen(true);
           if (request.current === requestId) {
             const booksWithImages = await Promise.all(
-              getBooks.map(async (book: any, index: any) => {
+              getBooks.map(async (book: Book) => {
                 const image = await getCoverImage(book.coverId);
                 return { ...book, image };
               })

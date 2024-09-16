@@ -11,8 +11,8 @@ function DetailsFromApi({
   reviewed,
 }: {
   bookKey: string;
-  isUser: Boolean;
-  reviewed: Boolean;
+  isUser: boolean;
+  reviewed: boolean;
 }) {
   const [book, setBook] = useState<bookDetails | undefined>(undefined);
 

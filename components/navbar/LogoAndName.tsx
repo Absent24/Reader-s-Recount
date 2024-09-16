@@ -10,17 +10,15 @@ function LogoAndName() {
     <div>
       <Button
         size="icon"
-        asChild
-      >
+        asChild>
         <Link href="/">
           <FaBookReader className="w-6 h-6" />
         </Link>
       </Button>
       <Link
         href="/"
-        className={`text-lg font-semibold ml-2 drop-shadow-md text-transparent bg-clip-text bg-gradient-to-r from-[#155f52] to-[#2bbbaa] ${lobster.className}`}
-      >
-        Reader's Recount
+        className={`text-lg font-semibold ml-2 drop-shadow-md text-transparent bg-clip-text bg-gradient-to-r from-[#155f52] to-[#2bbbaa] ${lobster.className}`}>
+        Reader&apos;s Recount
       </Link>
     </div>
   );
