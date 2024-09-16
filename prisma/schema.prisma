@@ -29,11 +29,11 @@ model Book {
   authorKey      String
   firstPublish   Int
   numOfPages     Int
-  coverId        Int?
-  openlibRating  Float?
-  openlibNumRating Int?
-  rrRating       Float?
-  rrNumRating    Int?
+  coverId        Int
+  openlibRating  Float
+  openlibNumRating Int
+  rrRating       Float
+  rrNumRating    Int
   image          String
   reviews        Review[]
 }

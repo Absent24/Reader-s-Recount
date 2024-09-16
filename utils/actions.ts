@@ -14,7 +14,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { deleteImage, imageExists, uploadImage } from "./supabase";
 import { bookDetails } from "./types";
-import { getApiDetailsData } from "./api";
 
 const getAuthUser = async () => {
   const user = await currentUser();
@@ -23,6 +22,12 @@ const getAuthUser = async () => {
   }
   if (!user.privateMetadata.hasProfile) redirect("/profile/create");
   return user;
+};
+
+export const isLoggedIn = async () => {
+  const user = await currentUser();
+  if (!user) return false;
+  return true;
 };
 
 const toastError = (error: unknown): { message: string } => {
@@ -179,7 +184,9 @@ export const submitReview = async (
         ...validData,
       },
     });
-    return { message: "Successful" };
+    await updateBookRatings(validData.bookKey);
+    revalidatePath(`/details/${validData.bookKey}`);
+    return { message: "Thank you for a review!" };
   } catch (error) {
     return toastError(error);
   }
@@ -210,4 +217,166 @@ const createBook = async (book: bookDetails) => {
   } catch (error) {
     console.log("Error creating book");
   }
+};
+
+export const getBook = async (bookKey: string) => {
+  try {
+    const book = await db.book.findUnique({
+      where: {
+        bookKey,
+      },
+    });
+    return book;
+  } catch (error) {
+    toastError(error);
+  }
+};
+
+const updateBookRatings = async (bookKey: string) => {
+  try {
+    const reviews = await db.review.findMany({
+      where: { bookKey },
+      select: { rating: true },
+    });
+
+    const rrNumRating = reviews.length;
+    const rrRating =
+      reviews.length > 0
+        ? Math.round(
+            (reviews.reduce((sum, review) => sum + review.rating, 0) /
+              reviews.length) *
+              100
+          ) / 100
+        : 0;
+
+    if (rrNumRating === 0) {
+      await db.book.delete({
+        where: { bookKey },
+      });
+    } else {
+      await db.book.update({
+        where: { bookKey },
+        data: {
+          rrNumRating,
+          rrRating,
+        },
+      });
+    }
+  } catch (error) {
+    console.log("Error in database!");
+  }
+};
+
+export const getBookReviews = async (bookKey: string) => {
+  const reviews = await db.review.findMany({
+    where: {
+      bookKey,
+    },
+    select: {
+      rating: true,
+      title: true,
+      review: true,
+      profile: {
+        select: {
+          username: true,
+          profileImage: true,
+        },
+      },
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+  });
+  return reviews;
+};
+
+export const getAllBooks = async () => {
+  const allBooks = await db.book.findMany({
+    orderBy: {
+      rrNumRating: "desc",
+    },
+  });
+  return allBooks;
+};
+
+export const getUserReviews = async (userId: string) => {
+  const userReviews = await db.review.findMany({
+    where: {
+      profileId: userId,
+    },
+    select: {
+      id: true,
+      rating: true,
+      title: true,
+      review: true,
+      bookKey: true,
+      book: {
+        select: {
+          title: true,
+          image: true,
+        },
+      },
+    },
+  });
+  return userReviews;
+};
+
+export const deleteReview = async ({
+  reviewId,
+  bookKey,
+}: {
+  reviewId: string;
+  bookKey: string;
+}) => {
+  await db.review.delete({
+    where: {
+      id: reviewId,
+    },
+  });
+  await updateBookRatings(bookKey);
+  revalidatePath(`/reviews`);
+  return { message: "Review deleted successfully" };
+};
+
+export const getSingleReview = async (id: string) => {
+  const review = await db.review.findUnique({
+    where: {
+      id,
+    },
+    select: {
+      rating: true,
+      title: true,
+      review: true,
+      bookKey: true,
+      book: {
+        select: {
+          title: true,
+        },
+      },
+    },
+  });
+  return review;
+};
+
+export const updateReview = async (
+  prevState: any,
+  formData: FormData,
+  id: string
+): Promise<{ message: string }> => {
+  try {
+    const rawData = Object.fromEntries(formData);
+    const validData = zodValidation(reviewSchema, rawData);
+    await db.review.update({
+      where: { id },
+      data: {
+        rating: validData.rating,
+        title: validData.title,
+        review: validData.review,
+      },
+    });
+    await updateBookRatings(validData.bookKey);
+  } catch (error) {
+    toastError(error);
+  }
+  redirect("/reviews");
 };

@@ -1,5 +1,11 @@
+import BookList from "@/components/home/BookList";
+
 function HomePage() {
-  return <h1 className="text-3xl">HomePage</h1>;
+  return (
+    <section>
+      <BookList />
+    </section>
+  );
 }
 
 export default HomePage;

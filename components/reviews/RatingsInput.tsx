@@ -10,11 +10,14 @@ import {
 const RatingInput = ({
   name,
   labelText,
+  defalut,
 }: {
   name: string;
   labelText?: string;
+  defalut?: number;
 }) => {
   const numbers = ["5", "4", "3", "2", "1"];
+  const defaultRating = defalut ? defalut.toString() : "5";
 
   return (
     <div className="mb-2 max-w-48">
@@ -24,7 +27,7 @@ const RatingInput = ({
         {labelText || name}
       </Label>
       <Select
-        defaultValue={numbers[0]}
+        defaultValue={defaultRating}
         name={name}
         required>
         <SelectTrigger>
