@@ -292,9 +292,7 @@ export const getBookReviews = async (bookKey: string) => {
 
 export const getAllBooks = async () => {
   const allBooks = await db.book.findMany({
-    orderBy: {
-      rrNumRating: "desc",
-    },
+    orderBy: [{ rrRating: "desc" }, { rrNumRating: "desc" }],
   });
   return allBooks;
 };
