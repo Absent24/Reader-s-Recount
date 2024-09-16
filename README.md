@@ -4,11 +4,7 @@
 
 ## Live Demo
 
-_Link to the hosted version of the project (coming soon)._
-
-## Installation Instructions
-
-No installation required. A link to the live hosted project will be provided once the project is hosted.
+**Link** https://readers-recount.vercel.app/
 
 ## Features
 
