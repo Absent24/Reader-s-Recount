@@ -15,6 +15,7 @@ Reader's Recount currently includes the following features:
 - **Reviews:** Users can leave a review on a book, view reviews made by other users, and edit or delete their own reviews.
 - **Database Storage:** Profile information and reviewed books (along with reviews) are stored in the database.
 - **Display Reviewed Books:** The homepage displays all books that have been reviewed.
+- **Sort Reviewed Books:** Users can sort all books that have been reviewed by chosen criteria.
 
 ## Usage
 

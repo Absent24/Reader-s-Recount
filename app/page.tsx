@@ -1,9 +1,12 @@
 import BookList from "@/components/home/BookList";
+import SortList from "@/components/home/SortList";
 
-function HomePage() {
+function HomePage(searchParams: { searchParams: { category: string } }) {
+  const category = searchParams.searchParams.category;
   return (
     <section>
-      <BookList />
+      <SortList />
+      <BookList sortOption={category} />
     </section>
   );
 }
